@@ -20,17 +20,23 @@ library(readr)
 library(dplyr)
 library(tidyr)
 library(plotly)
-
+library(stringr)
+library(raster)
+library(dplyr)
+library(ggmap)
+library(maps)
+library(mapview) # for interactive maps
 #------------------------------------------load all data files-----------------------------------------------
 
 #import anual data from project 1
 mydata1 = list.files(pattern="*.csv")
 allData <- lapply(mydata1, read.csv )
 mergedData <- do.call(rbind, allData)
+states <- map_data("state")
 
 #Creates subsets of my merged data files to display on sidebar
 stateNames <- unique(mergedData$State)
-countyNames <- subset(mergedData, select = c(State,County,Year))
+countyNames <- unique(mergedData, select = c(State,County,Year))
 years<-c(1990:2018)
 
 #mergedDailyData$Date <- format(mergedDailyData$Date, format="%y-%m-%d")
@@ -52,7 +58,8 @@ mergedDailyData$FullDate <- format(mergedDailyData$Date, format="%y-%m-%d")
 mergedDailyData$Date <- format(mergedDailyData$Date, format="%y-%m-%d")
 #seperate date into 3 columns
 mergedDailyData <- separate(mergedDailyData, col = "Date", into = c("Year","Month","Day"), sep = "-" )
-
+#create subset of pollutants to include in sidebar
+pollutants<- c("Ozone", "SO2", "CO", "NO2", "PM2.5", "PM10", "AQI")
 
 #--------------------------------------------------Body-----------------------------------------------------------
 
@@ -71,6 +78,7 @@ ui <- dashboardPage(
                    selectInput("State", "Select the State to visualize", stateNames, selected = "Illinois")
                    ,
                    selectInput("County", "Select the County to visualize", countyNames, selected = "Cook"),
+                   selectInput("Pollutant", "Select a pollutant or AQI to visualize", pollutants, selected = "AQI"),
                    
                    
                    h3(" Author: Jhon Nunez & Daisy Arellano"),
@@ -179,6 +187,16 @@ ui <- dashboardPage(
                    box(#table project 2
                      width = 20, solidHeader = TRUE, status = "success", DT::dataTableOutput(outputId = "daily3", height = 200)
                    )
+                 ),
+                 fluidRow(
+                   box(#table project 2
+                     width = 20, solidHeader = TRUE, status = "success", DT::dataTableOutput(outputId = "testing", height = 200)
+                   )
+                 ),
+                 fluidRow(
+                   box(#map project 2
+                     width = 40, solidHeader = TRUE, status = "success", plotlyOutput(outputId = "mapCounty", height = 400)
+                   )
                  )
                )#end of column
                
@@ -224,6 +242,7 @@ server <- function(input, output,session) {
                       choices = countyNames$County[countyNames$State == input$State & 
                                                      countyNames$Year == input$Year])
   })
+  
   
   
   #--------------------------------create subset of data based on user input-----------------------------------------
@@ -355,6 +374,68 @@ server <- function(input, output,session) {
   dailyAQIData <- reactive({  dailyAQI()$AQI  })
   dailyAQIPol <- reactive({  dailyAQI()$Defining.Parameter  })
   
+  pollutantTable <-  reactive({
+    if(input$Pollutant == "AQI"){
+      inputPollutant <- "Media.AQI"
+      subset(mergedData, Year == input$Year, 
+             select = c(State, County, Median.AQI))
+    }
+    else if(input$Pollutant == "CO"){
+      inputPollutant <- "Days.CO"
+      subset(mergedData, Year == input$Year, 
+             select = c(State, County, Days.CO))
+    }
+    else if(input$Pollutant == "NO2"){
+      inputPollutant <- "Days.NO2"
+      subset(mergedData, Year == input$Year, 
+             select = c(State, County, Days.NO2))
+    }
+    else if(input$Pollutant == "Ozone"){
+      inputPollutant <- "Days.Ozone"
+      subset(mergedData, Year == input$Year, 
+             select = c(State, County, Days.Ozone))
+    }
+    else if(input$Pollutant == "SO2"){
+      inputPollutant <- "Days.SO2"
+      subset(mergedData, Year == input$Year, 
+             select = c(State, County, Days.SO2))
+    }
+    else if(input$Pollutant == "PM2.5"){
+      inputPollutant <- "Days.PM2.5"
+      subset(mergedData, Year == input$Year, 
+             select = c(State, County, Days.PM2.5))
+    }
+    else if(input$Pollutant == "PM10"){
+      inputPollutant <- "Days.PM10"
+      subset(mergedData, Year == input$Year, 
+             select = c(State, County, Days.PM10))
+    }
+   
+  })
+  
+    Top10 <-  reactive({
+    if(input$Pollutant == "AQI"){
+      top_n(pollutantTable(), 99, Median.AQI)
+    }
+    else if(input$Pollutant == "CO"){
+      top_n(pollutantTable(), 99, Days.CO)
+    }
+    else if(input$Pollutant == "NO2"){
+      top_n(pollutantTable(), 99, Days.NO2)
+    }
+    else if(input$Pollutant == "Ozone"){
+      top_n(pollutantTable(), 99, Days.Ozone)
+    }
+    else if(input$Pollutant == "SO2"){
+      top_n(pollutantTable(), 99, Days.SO2)
+    }
+    else if(input$Pollutant == "PM2.5"){
+      top_n(pollutantTable(), 99, Days.PM2.5)
+    }
+    else if(input$Pollutant == "PM10"){
+      top_n(pollutantTable(), 99, Days.PM10)
+    }
+  })
   
   
   monthAQI <-  reactive({
@@ -555,8 +636,10 @@ server <- function(input, output,session) {
   
   #-----------------------------------------------------NEW----------------------------------------------------------
   
+
   
   output$daily1 <- renderPlotly({
+    
     
     graph <- ggplot() + geom_line(data = dailyAQI(), aes(x = FullDate, y = AQI,colour = "AQI", group = 1)) + xlab("Date") + ylab("AQI") + 
       stat_smooth(color = "#FC4E07", fill="#FC4E07", method = "loess") 
@@ -573,6 +656,8 @@ server <- function(input, output,session) {
                                                                                        "Highest pollutant:", pol 
                                                                                    ) )
     })
+  
+  
   
     output$daily2 <- renderPlot({
         
@@ -628,8 +713,22 @@ server <- function(input, output,session) {
       )
     )
     
+   
+    output$testing <- DT::renderDataTable(
+      DT::datatable({       
+        df <- as.data.frame( Top10() ) 
+      }, options = list(searching = FALSE, lengthChange = FALSE, pageLength = 3) 
+      )
+    )
     
     
+    output$mapCounty <- renderPlotly({
+      usa <- map_data("usa")
+      ggplot(data = states) + 
+        geom_polygon(aes(x = long, y = lat, fill = "black", group = group), color = "white") + 
+        coord_fixed(1.3) +
+        guides(fill=FALSE)  # do this to leave off the color legend
+    })
     
   
   
