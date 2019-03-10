@@ -20,15 +20,5 @@ dailyData = do.call(rbind, lapply(dailyFiles, function(x) read_csv(x, col_names 
 
 # Save the dataframe into a fst file format
 # A file is outputed 'dailyData.fst' into your current directory
-write_fst(dailyData, 'dailyData.fst')
-
-# Import the csv file names that hold the data for "hourly gasses" recorded information
-hourlyFiles = list.files(pattern = "^hourly.*")
-
-# Combine all the files into one data frame.
-hourlyData = do.call(rbind, lapply(hourlyFiles, function(x) read_csv(x, col_names = TRUE)))
-
-# Save the dataframe into a fst file format
-# A file is outputed 'hourlyGasData.fst' into your current directory
-write_fst(hourlyData, 'hourlyData.fst')
+write_fst(dailyData, "/Users/daisy/Desktop/CS424_Project2/dailyData.fst")
 
