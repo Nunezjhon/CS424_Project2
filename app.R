@@ -20,47 +20,25 @@ library(readr)
 library(dplyr)
 library(tidyr)
 library(plotly)
-library(stringr)
-library(raster)
-library(dplyr)
-library(ggmap)
-library(maps)
-library(mapview) # for interactive maps
-#------------------------------------------load all data files-----------------------------------------------
 
+#------------------------------------------------------------------------------------------------------------
 #import anual data from project 1
 mydata1 = list.files(pattern="*.csv")
 allData <- lapply(mydata1, read.csv )
 mergedData <- do.call(rbind, allData)
-states <- map_data("state")
-
 #Creates subsets of my merged data files to display on sidebar
 stateNames <- unique(mergedData$State)
-countyNames <- unique(mergedData, select = c(State,County,Year))
+countyNames <- subset(mergedData, select = c(State,County,Year))
 years<-c(1990:2018)
 
-#mergedDailyData$Date <- format(mergedDailyData$Date, format="%y-%m-%d")
-#test <- mergedDailyData[mergedDailyData$Date < as.Date("1990-12-31"), ]
-#test2 <- subset(test, select = c(Date, AQI))
-
-#------------------------------------------------------------------------------------------------------------
-
 #import daily data 
-mydata2 <- list.files(path="daily", pattern = "*csv")
-setwd("daily")
-allData2 <- lapply(mydata2, read.csv )
-mergedDailyData <- do.call(rbind, allData2)
-
+mergedDailyData <- read_fst('dailyData.fst')
 #add fulldate column
 mergedDailyData$FullDate <- format(mergedDailyData$Date, format="%y-%m-%d")
-
 #format date column 
 mergedDailyData$Date <- format(mergedDailyData$Date, format="%y-%m-%d")
 #seperate date into 3 columns
 mergedDailyData <- separate(mergedDailyData, col = "Date", into = c("Year","Month","Day"), sep = "-" )
-#create subset of pollutants to include in sidebar
-pollutants<- c("Ozone", "SO2", "CO", "NO2", "PM2.5", "PM10", "AQI")
-
 #--------------------------------------------------Body-----------------------------------------------------------
 
 #Dashboard page code which includes the header, sidebar, and body
@@ -78,7 +56,6 @@ ui <- dashboardPage(
                    selectInput("State", "Select the State to visualize", stateNames, selected = "Illinois")
                    ,
                    selectInput("County", "Select the County to visualize", countyNames, selected = "Cook"),
-                   selectInput("Pollutant", "Select a pollutant or AQI to visualize", pollutants, selected = "AQI"),
                    
                    
                    h3(" Author: Jhon Nunez & Daisy Arellano"),
@@ -97,111 +74,101 @@ ui <- dashboardPage(
     tabsetPanel(
       
       tabPanel("Yearly", 
-    
-          column(width = 3,
-                 box(
-                   width = 30, solidHeader = TRUE, status = "primary", plotOutput("Bar", height = 400)
-                 ),
-                 box(
-                   title = "AQI Days", width = 15, solidHeader = TRUE, status = "primary",plotOutput("Pie", height = 350)
-                 ),
-                 box(
-                   width = 30, solidHeader = TRUE, status = "primary",plotOutput("Table", height = 250)
-                 )
-          ), #end of column
-          
-          column(width = 4, 
-                 fluidRow(
-                   box(
-                     width = 12, solidHeader = TRUE, status = "primary", plotOutput("space5", height = 300)
-                   )
-                 ),#end of fluidRow
-                 
-                 fluidRow(
-                   box( title = "CO %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie1", height = 200)
-                   ),
-                   box(
-                     title = "NO2 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie2", height = 200)
-                   ),
-                   box(
-                     title = "Ozone %", width = 4, solidHeader = TRUE, status = "primary",plotOutput("Pie3", height = 200)
-                   )
-                 ),#end of fluidRow
-                 fluidRow(
-                   box(
-                     width = 12, solidHeader = TRUE, status = "primary", plotOutput("space7", height = 500)
-                   )
-                 )#end of fluidRow
-
-          ),#end of column
-          
-          column(width = 4, 
-                 fluidRow(
-                   box(
-                     width = 12, solidHeader = TRUE, status = "primary", plotOutput("space6", height = 300)
-                   )
-                 ), #end of fluidRow
-                 fluidRow(
-                   box(
-                     title = "SO2 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie4", height = 200)
-                   ),
-                   box(
-                     title = "PM2.5 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie5", height = 200)
-                   ),
-                   box(
-                     title = "PM10 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie6", height = 200)
-                   )
-                 ),#end of fluidRow
-                 fluidRow(
-                   box(
-                     width = 12,   solidHeader = TRUE, status = "primary", plotOutput("space8", height = 300)
-                   )
-                 ),#end of fluidRow  
-                  fluidRow(
-                     box(
-                       width = 12, solidHeader = TRUE, status = "primary", plotOutput("space9", height = 180)
-                     )
-                 )#end of fluidRow
-          )#end of column
+               
+               column(width = 3,
+                      box(
+                        width = 30, solidHeader = TRUE, status = "primary", plotOutput("Bar", height = 400)
+                      ),
+                      box(
+                        title = "AQI Days", width = 15, solidHeader = TRUE, status = "primary",plotOutput("Pie", height = 350)
+                      ),
+                      box(
+                        width = 30, solidHeader = TRUE, status = "primary",plotOutput("Table", height = 250)
+                      )
+               ), #end of column
+               
+               column(width = 4, 
+                      fluidRow(
+                        box(
+                          width = 12, solidHeader = TRUE, status = "primary", plotOutput("space5", height = 300)
+                        )
+                      ),#end of fluidRow
+                      
+                      fluidRow(
+                        box( title = "CO %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie1", height = 200)
+                        ),
+                        box(
+                          title = "NO2 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie2", height = 200)
+                        ),
+                        box(
+                          title = "Ozone %", width = 4, solidHeader = TRUE, status = "primary",plotOutput("Pie3", height = 200)
+                        )
+                      ),#end of fluidRow
+                      fluidRow(
+                        box(
+                          width = 12, solidHeader = TRUE, status = "primary", plotOutput("space7", height = 500)
+                        )
+                      )#end of fluidRow
+                      
+               ),#end of column
+               
+               column(width = 4, 
+                      fluidRow(
+                        box(
+                          width = 12, solidHeader = TRUE, status = "primary", plotOutput("space6", height = 300)
+                        )
+                      ), #end of fluidRow
+                      fluidRow(
+                        box(
+                          title = "SO2 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie4", height = 200)
+                        ),
+                        box(
+                          title = "PM2.5 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie5", height = 200)
+                        ),
+                        box(
+                          title = "PM10 %", width = 4, solidHeader = TRUE, status = "primary", plotOutput("Pie6", height = 200)
+                        )
+                      ),#end of fluidRow
+                      fluidRow(
+                        box(
+                          width = 12,   solidHeader = TRUE, status = "primary", plotOutput("space8", height = 300)
+                        )
+                      ),#end of fluidRow  
+                      fluidRow(
+                        box(
+                          width = 12, solidHeader = TRUE, status = "primary", plotOutput("space9", height = 180)
+                        )
+                      )#end of fluidRow
+               )#end of column
       ),#end of Yearly tabPanel
-  
+      
       #--------------------------------------------PROJECT 2---------------------------------------------------------
       
       tabPanel("Daily", 
                
                
                fluidRow( width = 12,
-                   box(#line graph
-                     title = "Daily AQI Data", width = 20,   solidHeader = TRUE, status = "success", plotlyOutput("daily1", height = 250)
-                   )
+                         box(#line graph
+                           title = "Daily AQI Data", width = 20,   solidHeader = TRUE, status = "success", plotlyOutput("daily1", height = 250)
+                         )
                ),
                
                column(width = 6,  
-                 fluidRow(
-                   box(#Bar Chart project 2
-                     width = 20, solidHeader = TRUE, status = "success", plotOutput("daily2", height = 300)
-                   )
-                 ),
-                 
-                 fluidRow(
-                   box(#table project 2
-                     width = 20, solidHeader = TRUE, status = "success", DT::dataTableOutput(outputId = "daily3", height = 200)
-                   )
-                 ),
-                 fluidRow(
-                   box(#table project 2
-                     width = 20, solidHeader = TRUE, status = "success", DT::dataTableOutput(outputId = "testing", height = 200)
-                   )
-                 ),
-                 fluidRow(
-                   box(#map project 2
-                     width = 40, solidHeader = TRUE, status = "success", plotlyOutput(outputId = "mapCounty", height = 400)
-                   )
-                 )
+                      fluidRow(
+                        box(#Bar Chart project 2
+                          width = 20, solidHeader = TRUE, status = "success", plotOutput("daily2", height = 300)
+                        )
+                      ),
+                      
+                      fluidRow(
+                        box(#table project 2
+                          width = 20, solidHeader = TRUE, status = "success", DT::dataTableOutput(outputId = "daily3", height = 200)
+                        )
+                      )
                )#end of column
                
-              
-
+               
+               
                
       )#end of Daily tabPanel
     )#end of tabsetPanel
@@ -242,7 +209,6 @@ server <- function(input, output,session) {
                       choices = countyNames$County[countyNames$State == input$State & 
                                                      countyNames$Year == input$Year])
   })
-  
   
   
   #--------------------------------create subset of data based on user input-----------------------------------------
@@ -367,79 +333,17 @@ server <- function(input, output,session) {
   #-----------------------------------------------------NEW----------------------------------------------------------
   
   dailyAQI <- reactive({
-    subset(mergedDailyData, Year == input$Year & county.Name == input$County, select = c(FullDate, AQI, Defining.Parameter))
+    subset(mergedDailyData, Year == input$Year & County == input$County, select = c(FullDate, AQI, Parameter))
   })
   
   dailyAQIFullDate <- reactive({  dailyAQI()$FullDate  })
   dailyAQIData <- reactive({  dailyAQI()$AQI  })
-  dailyAQIPol <- reactive({  dailyAQI()$Defining.Parameter  })
+  dailyAQIPol <- reactive({  dailyAQI()$Parameter  })
   
-  pollutantTable <-  reactive({
-    if(input$Pollutant == "AQI"){
-      inputPollutant <- "Media.AQI"
-      subset(mergedData, Year == input$Year, 
-             select = c(State, County, Median.AQI))
-    }
-    else if(input$Pollutant == "CO"){
-      inputPollutant <- "Days.CO"
-      subset(mergedData, Year == input$Year, 
-             select = c(State, County, Days.CO))
-    }
-    else if(input$Pollutant == "NO2"){
-      inputPollutant <- "Days.NO2"
-      subset(mergedData, Year == input$Year, 
-             select = c(State, County, Days.NO2))
-    }
-    else if(input$Pollutant == "Ozone"){
-      inputPollutant <- "Days.Ozone"
-      subset(mergedData, Year == input$Year, 
-             select = c(State, County, Days.Ozone))
-    }
-    else if(input$Pollutant == "SO2"){
-      inputPollutant <- "Days.SO2"
-      subset(mergedData, Year == input$Year, 
-             select = c(State, County, Days.SO2))
-    }
-    else if(input$Pollutant == "PM2.5"){
-      inputPollutant <- "Days.PM2.5"
-      subset(mergedData, Year == input$Year, 
-             select = c(State, County, Days.PM2.5))
-    }
-    else if(input$Pollutant == "PM10"){
-      inputPollutant <- "Days.PM10"
-      subset(mergedData, Year == input$Year, 
-             select = c(State, County, Days.PM10))
-    }
-   
-  })
-  
-    Top10 <-  reactive({
-    if(input$Pollutant == "AQI"){
-      top_n(pollutantTable(), 99, Median.AQI)
-    }
-    else if(input$Pollutant == "CO"){
-      top_n(pollutantTable(), 99, Days.CO)
-    }
-    else if(input$Pollutant == "NO2"){
-      top_n(pollutantTable(), 99, Days.NO2)
-    }
-    else if(input$Pollutant == "Ozone"){
-      top_n(pollutantTable(), 99, Days.Ozone)
-    }
-    else if(input$Pollutant == "SO2"){
-      top_n(pollutantTable(), 99, Days.SO2)
-    }
-    else if(input$Pollutant == "PM2.5"){
-      top_n(pollutantTable(), 99, Days.PM2.5)
-    }
-    else if(input$Pollutant == "PM10"){
-      top_n(pollutantTable(), 99, Days.PM10)
-    }
-  })
   
   
   monthAQI <-  reactive({
-    subset(mergedDailyData, Year == input$Year & county.Name == input$County , select = c(Year, Month, Category))
+    subset(mergedDailyData, Year == input$Year & County == input$County , select = c(Year, Month, Category))
   })
   
   jan <- reactive({ subset(monthAQI(), Month == "01", select = c(Month,Category) ) })
@@ -636,10 +540,8 @@ server <- function(input, output,session) {
   
   #-----------------------------------------------------NEW----------------------------------------------------------
   
-
   
   output$daily1 <- renderPlotly({
-    
     
     graph <- ggplot() + geom_line(data = dailyAQI(), aes(x = FullDate, y = AQI,colour = "AQI", group = 1)) + xlab("Date") + ylab("AQI") + 
       stat_smooth(color = "#FC4E07", fill="#FC4E07", method = "loess") 
@@ -650,86 +552,70 @@ server <- function(input, output,session) {
     
     gg <- ggplotly(graph)
     gg <- style(gg, line = list(color = 'green'), hoverinfo = "text", text = paste("Date:", date, 
-                                                                                       "<br>", 
-                                                                                       "AQI:", AQI, 
-                                                                                       "<br>",
-                                                                                       "Highest pollutant:", pol 
-                                                                                   ) )
-    })
+                                                                                   "<br>", 
+                                                                                   "AQI:", AQI, 
+                                                                                   "<br>",
+                                                                                   "Highest pollutant:", pol 
+    ) )
+  })
   
-  
-  
-    output$daily2 <- renderPlot({
-        
-      m1 <- jan()
-      df <- data.frame(January = "January", m1[2])
-      m2 <- feb()
-      df2 <- data.frame(February = "February", m2[2])
-      m3 <- mar()
-      df3 <- data.frame(March = "March", m3[2])
-      m4 <- apr()  
-      df4 <- data.frame(April = "April", m4[2])
-      m5 <- may()
-      df5 <- data.frame(May = "May", m5[2])
-      m6 <- jun()
-      df6 <- data.frame(June = "June", m6[2])
-      m7 <- jul()
-      df7 <- data.frame(July = "July", m7[2])
-      m8 <- aug()
-      df8 <- data.frame(August = "August", m8[2])
-      m9 <- sep()
-      df9 <- data.frame(September = "September", m9[2])
-      m10 <- oct()
-      df10 <- data.frame(October = "October", m10[2])
-      m11 <- nov()
-      df11 <- data.frame(November = "November", m11[2])
-      m12 <- dec()
-      df12 <- data.frame(December = "December", m12[2])
-                        
-      plot <- ggplot() + 
-        geom_bar(aes(y = Category, x = January, fill = Category), data = df, stat="identity")+
-        geom_bar(aes(y = Category, x = February, fill = Category), data = df2, stat="identity")+
-        geom_bar(aes(y = Category, x = March, fill = Category), data = df3, stat="identity")+
-        geom_bar(aes(y = Category, x = April, fill = Category), data = df4, stat="identity")+
-        geom_bar(aes(y = Category, x = May, fill = Category), data = df5, stat="identity")+
-        geom_bar(aes(y = Category, x = June, fill = Category), data = df6, stat="identity")+
-        geom_bar(aes(y = Category, x = July, fill = Category), data = df7, stat="identity")+
-        geom_bar(aes(y = Category, x = August, fill = Category), data = df8, stat="identity")+
-        geom_bar(aes(y = Category, x = September, fill = Category), data = df9, stat="identity")+
-        geom_bar(aes(y = Category, x = October, fill = Category), data = df10, stat="identity")+
-        geom_bar(aes(y = Category, x = November, fill = Category), data = df11, stat="identity")+
-        geom_bar(aes(y = Category, x = December, fill = Category), data = df12, stat="identity")
-      
-      plot
-        
-        
-    })
+  output$daily2 <- renderPlot({
+    
+    m1 <- jan()
+    df <- data.frame(January = "January", m1[2])
+    m2 <- feb()
+    df2 <- data.frame(February = "February", m2[2])
+    m3 <- mar()
+    df3 <- data.frame(March = "March", m3[2])
+    m4 <- apr()  
+    df4 <- data.frame(April = "April", m4[2])
+    m5 <- may()
+    df5 <- data.frame(May = "May", m5[2])
+    m6 <- jun()
+    df6 <- data.frame(June = "June", m6[2])
+    m7 <- jul()
+    df7 <- data.frame(July = "July", m7[2])
+    m8 <- aug()
+    df8 <- data.frame(August = "August", m8[2])
+    m9 <- sep()
+    df9 <- data.frame(September = "September", m9[2])
+    m10 <- oct()
+    df10 <- data.frame(October = "October", m10[2])
+    m11 <- nov()
+    df11 <- data.frame(November = "November", m11[2])
+    m12 <- dec()
+    df12 <- data.frame(December = "December", m12[2])
+    
+    plot <- ggplot() + 
+      geom_bar(aes(y = Category, x = January, fill = Category), data = df, stat="identity")+
+      geom_bar(aes(y = Category, x = February, fill = Category), data = df2, stat="identity")+
+      geom_bar(aes(y = Category, x = March, fill = Category), data = df3, stat="identity")+
+      geom_bar(aes(y = Category, x = April, fill = Category), data = df4, stat="identity")+
+      geom_bar(aes(y = Category, x = May, fill = Category), data = df5, stat="identity")+
+      geom_bar(aes(y = Category, x = June, fill = Category), data = df6, stat="identity")+
+      geom_bar(aes(y = Category, x = July, fill = Category), data = df7, stat="identity")+
+      geom_bar(aes(y = Category, x = August, fill = Category), data = df8, stat="identity")+
+      geom_bar(aes(y = Category, x = September, fill = Category), data = df9, stat="identity")+
+      geom_bar(aes(y = Category, x = October, fill = Category), data = df10, stat="identity")+
+      geom_bar(aes(y = Category, x = November, fill = Category), data = df11, stat="identity")+
+      geom_bar(aes(y = Category, x = December, fill = Category), data = df12, stat="identity")
+    
+    plot
     
     
-    output$daily3 <- DT::renderDataTable(
-      DT::datatable({       
-        df <- as.data.frame( monthAQI() ) 
-                   }, options = list(searching = FALSE, lengthChange = FALSE, pageLength = 3) 
-      )
+  })
+  
+  
+  output$daily3 <- DT::renderDataTable(
+    DT::datatable({       
+      df <- as.data.frame( monthAQI() ) 
+    }, options = list(searching = FALSE, lengthChange = FALSE, pageLength = 3) 
     )
-    
-   
-    output$testing <- DT::renderDataTable(
-      DT::datatable({       
-        df <- as.data.frame( Top10() ) 
-      }, options = list(searching = FALSE, lengthChange = FALSE, pageLength = 3) 
-      )
-    )
-    
-    
-    output$mapCounty <- renderPlotly({
-      usa <- map_data("usa")
-      ggplot(data = states) + 
-        geom_polygon(aes(x = long, y = lat, fill = "black", group = group), color = "white") + 
-        coord_fixed(1.3) +
-        guides(fill=FALSE)  # do this to leave off the color legend
-    })
-    
+  )
+  
+  
+  
+  
   
   
   
@@ -738,4 +624,3 @@ server <- function(input, output,session) {
 }# end
 # Run the application
 shinyApp(ui, server)
-

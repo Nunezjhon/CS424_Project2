@@ -1,0 +1,5 @@
+fwd
+dir()
+getwd()
+set("/Users/daisy/Desktop/CS424_Project2")
+setwd("/Users/daisy/Desktop/CS424_Project2")
