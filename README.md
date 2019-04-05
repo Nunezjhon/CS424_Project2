@@ -6,6 +6,7 @@
 
 <h5> Instructions </h5>
 
+To view the YouTube video: Click <a href="https://www.youtube.com/watch?v=DfB2KeXQ6_s">here</a>  
 To view the shinyapp dashboard: Click <a href="http://shiny.evl.uic.edu:3838/g9/CS424_Project2/">here</a> 
 
 Our application allows the user to start by picking a year, county and state they would like to visualize.
