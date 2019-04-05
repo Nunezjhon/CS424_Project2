@@ -12,7 +12,7 @@ Our application allows the user to start by picking a year, county and state the
 These can be chosen by a drop down menu which updates as the user clicks on a state or year to show only the information for which there exists data.
 Our app functions for all years of all counties for yearly and daily data thus fulfilling B and C level requirements about data downloading. Also functions for hourly data which we will discuss later. 
 
-
+![project2](https://user-images.githubusercontent.com/35846525/55626730-eb2c9800-5771-11e9-8053-d140c840c235.png)
 
 
 <h5> Libraries Used: </h5>
